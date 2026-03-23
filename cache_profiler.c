@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
+#include <windows.h>
 
 #define KB(x) ((x) * 1024)
 #define MB(x) ((x) * 1024 * 1024)
@@ -16,8 +17,22 @@ uint64_t rdtsc() {
     return ((uint64_t)hi << 32) | lo;
 }
 
-int main() {
-    printf("Size_KB, Cycles_per_access\n");
+int main(int argc, char* argv[]) {
+    if (argc == 2){
+        int core = atoi(argv[1]);
+        HANDLE hProc = GetCurrentProcess();
+        DWORD_PTR mask = (DWORD_PTR)1 << core;
+
+        if (!SetProcessAffinityMask(hProc, mask)) {
+    DWORD err = GetLastError();
+    printf("SetProcessAffinityMask failed: %lu\n", err);
+} else {
+    printf("Affinity ustawione na rdzeń %d (mask=0x%llX)\n", core, (unsigned long long)mask);
+}
+
+        while (1)
+        {
+                printf("Size_KB, Cycles_per_access\n");
     for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
         size_t array_size = (KB(size_kb) / sizeof(int));
         int* array = (int*)malloc(array_size * sizeof(int));
@@ -44,6 +59,33 @@ int main() {
 
     printf("Finished benchmark, press Enter to exit...\n");
     getchar();
+        }
+        return 0;
+    }
 
+    STARTUPINFO si = { sizeof(si)};
+    PROCESS_INFORMATION pi1, pi2;
+
+    char cmd1[256];
+    char cmd2[256];
+    sprintf(cmd1, "%s 0", argv[0]);
+    sprintf(cmd2, "%s 20", argv[0]);
+
+    if (!CreateProcessA(NULL, cmd1, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi1))
+        printf("CreateProcess 0 failed\n");
+    else {
+        CloseHandle(pi1.hThread);
+        CloseHandle(pi1.hProcess);
+    }
+
+    if (!CreateProcessA(NULL, cmd2, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi2))
+        printf("CreateProcess 7 failed\n");
+    else {
+        CloseHandle(pi2.hThread);
+        CloseHandle(pi2.hProcess);
+    }
+
+    printf("Parent (%lu) uruchomił dzieci.\n", GetCurrentProcessId());
     return 0;
+
 }
