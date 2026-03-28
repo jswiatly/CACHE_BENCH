@@ -49,6 +49,10 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "EXAMPLE: %s 0 10\n", argv[0]);
         return 1;
     }
+    while(1){
+        reset_cursor_position();
+        printf("=== CACHE PROFILER ===\n\n");
+    }
 
     int core = atoi(argv[1]);
     int num_cores = argc - 1;
