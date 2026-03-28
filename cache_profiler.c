@@ -13,6 +13,19 @@
 #define STRIDE 64
 #define REPEATS 10000
 
+#define NUM_STEPS 16
+
+typedef struct {
+    int core_id;
+    int status;
+    double cycles[NUM_STEPS];
+} ThreadData;
+
+void reset_cursor_position(){
+    COORD coord = {0,0};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
 static inline uint64_t rdtsc_start() {
     _mm_lfence();
     return __rdtsc();
