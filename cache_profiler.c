@@ -3,19 +3,35 @@
 #include <stdint.h>
 #include <time.h>
 #include <windows.h>
+#include <stddef.h>
+#include <x86intrin.h> // __rtdsc(), __rdtscp() and _mm_lfence()
 
-#define KB(x) ((x) * 1024)
-#define MB(x) ((x) * 1024 * 1024)
+#define KB(x) ((size_t)(x) * 1024ULL)
+#define MB(x) ((size_t)(x) * 1024ULL * 1024ULL)
 
 #define MAX_SIZE_MB 128
-#define STRIDE 64  // bytes
+#define STRIDE 64
 #define REPEATS 10000
 
+static inline uint64_t rdtsc_start(){
+    _mm_lfence();
+    return __rdtsc();
+}
+
+static inline uint64_t rdtsc_end(){
+    unsigned int aux;
+    uint64_t t = __rdtscp(&aux);
+    _mm_lfence();
+    return t;
+}
+
+/* old stuff
 uint64_t rdtsc() {
     unsigned int lo, hi;
     __asm__ volatile ("rdtsc" : "=a"(lo), "=d"(hi));
     return ((uint64_t)hi << 32) | lo;
 }
+*/
 
 int main(int argc, char* argv[]) {
     if (argc == 2){
@@ -27,7 +43,7 @@ int main(int argc, char* argv[]) {
     DWORD err = GetLastError();
     printf("SetProcessAffinityMask failed: %lu\n", err);
 } else {
-    printf("Affinity ustawione na rdzeń %d (mask=0x%llX)\n", core, (unsigned long long)mask);
+    printf("Affinity set on core %d (mask=0x%llX)\n", core, (unsigned long long)mask);
 }
 
         while (1)
@@ -41,16 +57,20 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
+        for (size_t i = 0; i < array_size; i++) {
+            array[i] = 0; 
+        }
+
         // Touch every STRIDE element in the array
         size_t steps = array_size * sizeof(int) / STRIDE;
         size_t step_size = STRIDE / sizeof(int);
-        uint64_t start = rdtsc();
+        uint64_t start = rdtsc_start();
         for (int r = 0; r < REPEATS; r++) {
             for (size_t i = 0; i < steps; i++) {
                 array[i * step_size]++;
             }
         }
-        uint64_t end = rdtsc();
+        uint64_t end = rdtsc_end();
 
         double avg_cycles = (double)(end - start) / (REPEATS * steps);
         printf("%zu, %.2f\n", size_kb, avg_cycles);
