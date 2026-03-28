@@ -26,6 +26,10 @@ void reset_cursor_position(){
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
+DWORD WINAPI BenchmarkThread(){
+
+}
+
 static inline uint64_t rdtsc_start() {
     _mm_lfence();
     return __rdtsc();
@@ -48,6 +52,8 @@ int main(int argc, char *argv[]) {
 
     int core = atoi(argv[1]);
     int num_cores = argc - 1;
+    system("cls");
+    HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     
     if (argc == 2) {
         HANDLE hProc = GetCurrentProcess();
