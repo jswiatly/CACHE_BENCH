@@ -40,12 +40,14 @@ static inline uint64_t rdtsc_end() {
 
 int main(int argc, char *argv[]) {
     if (argc < 2){
-        fprintf(stderr, "ERROR: CORE NUMBER NOT SPECIFIED!\n ");
-        fprintf(stderr, "USAGE: %s <core_index>\n", argv[0]);
+        fprintf(stderr, "ERROR: No cores specified!\n ");
+        fprintf(stderr, "USAGE: %s <core_id_1> <core_id_2> ... <core_id_N>\n", argv[0]);
+        fprintf(stderr, "EXAMPLE: %s 0 10\n", argv[0]);
         return 1;
     }
 
     int core = atoi(argv[1]);
+    int num_cores = argc - 1;
     
     if (argc == 2) {
         HANDLE hProc = GetCurrentProcess();
