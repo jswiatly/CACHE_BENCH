@@ -28,6 +28,7 @@ void reset_cursor_position(){
 
 DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     ThreadData *data = (ThreadData *) lpParam;
+    DWORD_PTR mask = (DWORD)1ULL;
 }
 
 static inline uint64_t rdtsc_start() {
