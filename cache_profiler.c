@@ -26,8 +26,8 @@ void reset_cursor_position(){
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-DWORD WINAPI BenchmarkThread(){
-
+DWORD WINAPI BenchmarkThread(LPVOID lpParam){
+    ThreadData *data = (ThreadData *) lpParam;
 }
 
 static inline uint64_t rdtsc_start() {
