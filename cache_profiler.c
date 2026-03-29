@@ -49,27 +49,29 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "EXAMPLE: %s 0 10\n", argv[0]);
         return 1;
     }
-    while(1){
-        reset_cursor_position();
-        printf("=== CACHE PROFILER ===\n\n");
+
+    while(0){
+       // reset_cursor_position();
+     //   printf("=== CACHE PROFILER ===\n\n");
+      //  printf("%-10s |", "Size (KB)");
     }
 
     int core = atoi(argv[1]);
     int num_cores = argc - 1;
-    system("cls");
+
+    printf("=== CACHE PROFILER ===\n\n");
+    printf("%-10s |", "Size (KB)");
+    for (int i = 0; i < num_cores; i++){
+        printf(" Core %-4d |", i);
+    }
+    printf("\n");
+    printf("-----------+");
+    for (int i = 0; i < num_cores; i++) printf("-----------+");
+    printf("\n");
+
     HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     
     if (argc == 2) {
-        HANDLE hProc = GetCurrentProcess();
-        DWORD_PTR mask = (DWORD_PTR) 1 << core;
-
-        if (!SetProcessAffinityMask(hProc, mask)) {
-            return 1;
-        }
-
-        printf("# Core %d Benchmark Start\n", core);
-        printf("Core,Size_KB,Cycles\n");
-
         for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
             size_t array_size = (KB(size_kb) / sizeof(int));
             int *array = (int *)malloc(array_size * sizeof(int));
@@ -99,29 +101,5 @@ int main(int argc, char *argv[]) {
         }
         return 0;
     }
-
-    STARTUPINFO si = { sizeof(si) };
-    PROCESS_INFORMATION pi1, pi2;
-    char cmd1[256];
-    char cmd2[256];
-
-    sprintf(cmd1, "%s 0", argv[0]);
-    sprintf(cmd2, "%s 20", argv[0]);
-
-    if (!CreateProcessA(NULL, cmd1, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi1)) {
-        printf("CreateProcess 0 failed\n");
-    } else {
-        CloseHandle(pi1.hThread);
-        CloseHandle(pi1.hProcess);
-    }
-
-    if (!CreateProcessA(NULL, cmd2, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi2)) {
-        printf("CreateProcess 7 failed\n");
-    } else {
-        CloseHandle(pi2.hThread);
-        CloseHandle(pi2.hProcess);
-    }
-
-    printf("Parent (%lu) uruchomił dzieci.\n", GetCurrentProcessId());
     return 0;
 }
