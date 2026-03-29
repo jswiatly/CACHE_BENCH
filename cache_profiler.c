@@ -26,11 +26,6 @@ void reset_cursor_position(){
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-DWORD WINAPI BenchmarkThread(LPVOID lpParam){
-    ThreadData *data = (ThreadData *) lpParam;
-    DWORD_PTR mask = (DWORD)1ULL;
-}
-
 static inline uint64_t rdtsc_start() {
     _mm_lfence();
     return __rdtsc();
@@ -41,6 +36,40 @@ static inline uint64_t rdtsc_end() {
     uint64_t t = __rdtscp(&aux);
     _mm_lfence();
     return t;
+}
+
+DWORD WINAPI BenchmarkThread(LPVOID lpParam){
+    ThreadData *data = (ThreadData *) lpParam;
+    DWORD_PTR mask = (DWORD)1ULL << data->core_id;
+    SetThreadAffinityMask(GetCurrentThread(), mask);
+
+    for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
+        size_t array_size = (KB(size_kb) / sizeof(int));
+        int *array = (int *)malloc(array_size * sizeof(int));
+
+        if (!array) break;
+
+        for (size_t i = 0; i < array_size; i++) array[i] = 0;
+
+            size_t steps = array_size * sizeof(int) / STRIDE;
+            size_t step_size = STRIDE / sizeof(int);
+
+            uint64_t start = rdtsc_start();
+            for (int r = 0; r < REPEATS; r++) {
+                for (size_t i = 0; i < steps; i++) {
+                    array[i * step_size]++;
+                }
+            }
+            uint64_t end = rdtsc_end();
+
+            double avg_cycles = (double)(end - start) / (REPEATS * steps);
+            printf("%zu, %.2f\n", size_kb, avg_cycles);
+
+            free(array);
+
+    }
+
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -87,35 +116,5 @@ int main(int argc, char *argv[]) {
 
     HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     
-    if (argc == 2) {
-        for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
-            size_t array_size = (KB(size_kb) / sizeof(int));
-            int *array = (int *)malloc(array_size * sizeof(int));
-
-            if (!array)
-                break;
-
-            for (size_t i = 0; i < array_size; i++)
-                array[i] = 0;
-
-            // Touch every STRIDE element in the array
-            size_t steps = array_size * sizeof(int) / STRIDE;
-            size_t step_size = STRIDE / sizeof(int);
-
-            uint64_t start = rdtsc_start();
-            for (int r = 0; r < REPEATS; r++) {
-                for (size_t i = 0; i < steps; i++) {
-                    array[i * step_size]++;
-                }
-            }
-            uint64_t end = rdtsc_end();
-
-            double avg_cycles = (double)(end - start) / (REPEATS * steps);
-            printf("%zu, %.2f\n", size_kb, avg_cycles);
-
-            free(array);
-        }
-        return 0;
-    }
     return 0;
 }
