@@ -69,6 +69,14 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < num_cores; i++) printf("-----------+");
     printf("\n");
 
+    for (int step = 0; step < NUM_STEPS; step++){
+        printf("%-10d |", step);
+        for (int i = 0; i < num_cores; i++){
+            printf(" %-9s |", "...");
+        }
+        printf("\n");
+    }
+
     HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     
     if (argc == 2) {
