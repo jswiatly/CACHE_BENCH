@@ -59,6 +59,13 @@ int main(int argc, char *argv[]) {
     int core = atoi(argv[1]);
     int num_cores = argc - 1;
 
+    size_t sizes_kb[NUM_STEPS];
+    size_t current_size = 4;
+    for (int i = 0; i < NUM_STEPS; i++){
+        sizes_kb[i] = current_size;
+        current_size *= 2;
+    }
+
     printf("=== CACHE PROFILER ===\n\n");
     printf("%-10s |", "Size (KB)");
     for (int i = 0; i < num_cores; i++){
@@ -70,7 +77,7 @@ int main(int argc, char *argv[]) {
     printf("\n");
 
     for (int step = 0; step < NUM_STEPS; step++){
-        printf("%-10d |", step);
+        printf("%-10d |", sizes_kb[step]);
         for (int i = 0; i < num_cores; i++){
             printf(" %-9s |", "...");
         }
