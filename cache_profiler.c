@@ -81,14 +81,18 @@ int main(int argc, char *argv[]) {
     }
 
     int all_done = 0;
+
     while(!all_done){
-        reset_cursor_position();
+    //    reset_cursor_position();
         all_done = 1;
         Sleep(100);
     }
 
     int core = atoi(argv[1]);
     int num_cores = argc - 1;
+
+    HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
+    ThreadData *thread_data = calloc(num_cores, sizeof(ThreadData));
 
     size_t sizes_kb[NUM_STEPS];
     size_t current_size = 4;
@@ -115,7 +119,10 @@ int main(int argc, char *argv[]) {
         printf("\n");
     }
 
-    HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
+    printf("\nStatus:\n");
+    for (int i = 0; i < num_cores; i++) {
+        printf("Core %2d:", thread_data[i].core_id);
+    }
     
     return 0;
 }
