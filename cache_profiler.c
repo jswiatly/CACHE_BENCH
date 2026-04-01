@@ -121,8 +121,10 @@ int main(int argc, char *argv[]) {
 
     printf("\nStatus:\n");
     for (int i = 0; i < num_cores; i++) {
-        printf("Core %2d:", thread_data[i].core_id);
+        printf("Core %2d: ", thread_data[i].core_id);
     }
     
+    free(threads);
+    free(thread_data);
     return 0;
 }
