@@ -88,11 +88,14 @@ int main(int argc, char *argv[]) {
         Sleep(100);
     }
 
-    int core = atoi(argv[1]);
     int num_cores = argc - 1;
 
     HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     ThreadData *thread_data = calloc(num_cores, sizeof(ThreadData));
+    
+    for (int i = 0; i < num_cores; i++){
+        thread_data[i].core_id = atoi(argv[i + 1]);
+    }
 
     size_t sizes_kb[NUM_STEPS];
     size_t current_size = 4;
@@ -104,7 +107,7 @@ int main(int argc, char *argv[]) {
     printf("=== CACHE PROFILER ===\n\n");
     printf("%-10s |", "Size (KB)");
     for (int i = 0; i < num_cores; i++){
-        printf(" Core %-4d |", i);
+        printf(" Core %-4d |", thread_data[i].core_id);
     }
     printf("\n");
     printf("-----------+");
