@@ -80,10 +80,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    while(0){
-       // reset_cursor_position();
-     //   printf("=== CACHE PROFILER ===\n\n");
-      //  printf("%-10s |", "Size (KB)");
+    int all_done = 0;
+    while(!all_done){
+        reset_cursor_position();
+        all_done = 1;
+        Sleep(100);
     }
 
     int core = atoi(argv[1]);
