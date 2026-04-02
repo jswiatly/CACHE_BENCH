@@ -44,6 +44,8 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     DWORD_PTR mask = (DWORD)1ULL << data->core_id;
     SetThreadAffinityMask(GetCurrentThread(), mask);
 
+    int step_idx = 0;
+
     for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
         size_t array_size = (KB(size_kb) / sizeof(int));
         int *array = (int *)malloc(array_size * sizeof(int));
@@ -63,11 +65,11 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
             }
             uint64_t end = rdtsc_end();
 
-            double avg_cycles = (double)(end - start) / (REPEATS * steps);
-            printf("%zu, %.2f\n", size_kb, avg_cycles);
+           data ->cycles[step_idx] = (double)(end - start) / (REPEATS * steps);
+            
 
             free(array);
-
+            step_idx++;
     }
 
     data->status = 2;
@@ -118,7 +120,11 @@ int main(int argc, char *argv[]) {
     for (int step = 0; step < NUM_STEPS; step++){
         printf("%-10d |", sizes_kb[step]);
         for (int i = 0; i < num_cores; i++){
-            printf(" %-9s |", "...");
+            if (thread_data[i].cycles[step] > 0){
+                printf(" %-8.2f |", thread_data[i].cycles[step]);
+            } else{
+                printf(" %-9s |", "...");
+            }
         }
         printf("\n");
     }
