@@ -40,6 +40,7 @@ static inline uint64_t rdtsc_end() {
 
 DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     ThreadData *data = (ThreadData *) lpParam;
+    data->status = 1;
     DWORD_PTR mask = (DWORD)1ULL << data->core_id;
     SetThreadAffinityMask(GetCurrentThread(), mask);
 
@@ -69,6 +70,7 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
 
     }
 
+    data->status = 2;
     return 0;
 }
 
@@ -82,19 +84,14 @@ int main(int argc, char *argv[]) {
 
     int all_done = 0;
 
-    while(!all_done){
-    //    reset_cursor_position();
-        all_done = 1;
-        Sleep(100);
-    }
-
-    int num_cores = argc - 1;
+        int num_cores = argc - 1;
 
     HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     ThreadData *thread_data = calloc(num_cores, sizeof(ThreadData));
     
     for (int i = 0; i < num_cores; i++){
         thread_data[i].core_id = atoi(argv[i + 1]);
+        threads[i] = CreateThread(NULL, 0, BenchmarkThread, &thread_data[i], 0, NULL);
     }
 
     size_t sizes_kb[NUM_STEPS];
@@ -104,7 +101,9 @@ int main(int argc, char *argv[]) {
         current_size *= 2;
     }
 
-    printf("=== CACHE PROFILER ===\n\n");
+    while(!all_done){
+        reset_cursor_position();
+        printf("=== CACHE PROFILER ===\n\n");
     printf("%-10s |", "Size (KB)");
     for (int i = 0; i < num_cores; i++){
         printf(" Core %-4d |", thread_data[i].core_id);
@@ -125,6 +124,12 @@ int main(int argc, char *argv[]) {
     printf("\nStatus:\n");
     for (int i = 0; i < num_cores; i++) {
         printf("Core %2d: ", thread_data[i].core_id);
+        if (thread_data[i].status == 0) printf("[ CZEKA ]\n");
+        else if (thread_data[i].status == 1) { printf(" [ PRACUJE \n]"); all_done = 0;}
+        else if (thread_data[i].status == 2) printf("[ GOTOWE ]\n");
+    }
+        all_done = 1;
+        Sleep(100);
     }
     
     free(threads);
