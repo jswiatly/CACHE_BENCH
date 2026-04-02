@@ -94,6 +94,8 @@ int main(int argc, char *argv[]) {
         threads[i] = CreateThread(NULL, 0, BenchmarkThread, &thread_data[i], 0, NULL);
     }
 
+    system("cls");
+
     size_t sizes_kb[NUM_STEPS];
     size_t current_size = 4;
     for (int i = 0; i < NUM_STEPS; i++){
