@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
         printf("%-10d |", sizes_kb[step]);
         for (int i = 0; i < num_cores; i++){
             if (thread_data[i].cycles[step] > 0){
-                printf(" %-8.2f |", thread_data[i].cycles[step]);
+                printf(" %-9.2f |", thread_data[i].cycles[step]);
             } else{
                 printf(" %-9s |", "...");
             }
