@@ -130,13 +130,13 @@ int main(int argc, char *argv[]) {
     }
 
     printf("\nStatus:\n");
+    all_done = 1;
     for (int i = 0; i < num_cores; i++) {
         printf("Core %2d: ", thread_data[i].core_id);
         if (thread_data[i].status == 0) printf("[ CZEKA ]\n");
-        else if (thread_data[i].status == 1) { printf(" [ PRACUJE \n]"); all_done = 0;}
+        else if (thread_data[i].status == 1) { printf(" [ PRACUJE ]\n"); all_done = 0;}
         else if (thread_data[i].status == 2) printf("[ GOTOWE ]\n");
     }
-        all_done = 1;
         Sleep(100);
     }
     
