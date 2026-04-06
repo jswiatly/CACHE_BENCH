@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h>
 #include <x86intrin.h>	// __rtdsc(), __rdtscp() and _mm_lfence()
 
 #define KB(x) ((size_t)(x) * 1024ULL)
@@ -38,6 +37,27 @@ static inline uint64_t rdtsc_end() {
     return t;
 }
 
+#ifdef __linux__
+
+#define _GNU_SOURCE
+#include <pthread.h>
+#include <sched.h>
+#include <unistd.h>
+
+void* BenchmarkThread(void* lpParam){
+    ThreadData *data = (ThreadData *) lpParam;
+    data->status = 1;
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(data->core_id, &cpu_set);
+    pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+    
+}
+
+#elif _WIN32
+#include <windows.h>
+
 DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     ThreadData *data = (ThreadData *) lpParam;
     data->status = 1;
@@ -48,7 +68,7 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
 
     for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
         size_t array_size = (KB(size_kb) / sizeof(int));
-        int *array = (int *)malloc(array_size * sizeof(int));
+        volatile int *array = (int *)malloc(array_size * sizeof(int));
 
         if (!array) break;
 
@@ -60,7 +80,7 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
             uint64_t start = rdtsc_start();
             for (int r = 0; r < REPEATS; r++) {
                 for (size_t i = 0; i < steps; i++) {
-                    array[i * step_size]++;
+                   array[i * step_size]++;
                 }
             }
             uint64_t end = rdtsc_end();
@@ -68,13 +88,14 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
            data ->cycles[step_idx] = (double)(end - start) / (REPEATS * steps);
             
 
-            free(array);
+            free((void *)array);
             step_idx++;
     }
 
     data->status = 2;
     return 0;
 }
+#endif
 
 int main(int argc, char *argv[]) {
     if (argc < 2){
