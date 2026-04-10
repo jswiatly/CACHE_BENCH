@@ -1,48 +1,32 @@
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include "profiler.h"
 #include <x86intrin.h>	// __rtdsc(), __rdtscp() and _mm_lfence()
-
-#define KB(x) ((size_t)(x) * 1024ULL)
-#define MB(x) ((size_t)(x) * 1024ULL * 1024ULL)
-
-#define MAX_SIZE_MB 128
-#define STRIDE 64
-#define REPEATS 10000
-
-#define NUM_STEPS 16
-
-typedef struct {
-    int core_id;
-    int status;
-    double cycles[NUM_STEPS];
-} ThreadData;
 
 void reset_cursor_position(){
     COORD coord = {0,0};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-static inline uint64_t rdtsc_start() {
+uint64_t rdtsc_start() {
     _mm_lfence();
     return __rdtsc();
 }
 
-static inline uint64_t rdtsc_end() {
+uint64_t rdtsc_end() {
     unsigned int aux;
     uint64_t t = __rdtscp(&aux);
     _mm_lfence();
     return t;
 }
 
+/*
 #ifdef __linux__
 
 #define _GNU_SOURCE
 #include <pthread.h>
 #include <sched.h>
 #include <unistd.h>
+
+
 
 void* BenchmarkThread(void* lpParam){
     ThreadData *data = (ThreadData *) lpParam;
@@ -55,8 +39,8 @@ void* BenchmarkThread(void* lpParam){
     
 }
 
-#elif _WIN32
-#include <windows.h>
+ #elif _WIN32
+*/
 
 DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     ThreadData *data = (ThreadData *) lpParam;
@@ -95,7 +79,7 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     data->status = 2;
     return 0;
 }
-#endif
+// #endif
 
 int main(int argc, char *argv[]) {
     if (argc < 2){
