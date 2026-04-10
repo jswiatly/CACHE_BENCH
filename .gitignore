@@ -1,0 +1,15 @@
+# CMake
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# Binaries
+*.exe
+*.obj
+*.pdb
+*.ilk
+
+# VS Code / IDE
+.vscode/
+.vs/
