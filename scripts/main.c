@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <windows.h>
 #include <x86intrin.h>	// __rtdsc(), __rdtscp() and _mm_lfence()
 
 #define KB(x) ((size_t)(x) * 1024ULL)
@@ -38,14 +37,38 @@ static inline uint64_t rdtsc_end() {
     return t;
 }
 
+#ifdef __linux__
+
+#define _GNU_SOURCE
+#include <pthread.h>
+#include <sched.h>
+#include <unistd.h>
+
+void* BenchmarkThread(void* lpParam){
+    ThreadData *data = (ThreadData *) lpParam;
+    data->status = 1;
+
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(data->core_id, &cpu_set);
+    pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset);
+    
+}
+
+#elif _WIN32
+#include <windows.h>
+
 DWORD WINAPI BenchmarkThread(LPVOID lpParam){
     ThreadData *data = (ThreadData *) lpParam;
+    data->status = 1;
     DWORD_PTR mask = (DWORD)1ULL << data->core_id;
     SetThreadAffinityMask(GetCurrentThread(), mask);
 
+    int step_idx = 0;
+
     for (size_t size_kb = 4; size_kb <= MB(MAX_SIZE_MB) / 1024; size_kb *= 2) {
         size_t array_size = (KB(size_kb) / sizeof(int));
-        int *array = (int *)malloc(array_size * sizeof(int));
+        volatile int *array = (int *)malloc(array_size * sizeof(int));
 
         if (!array) break;
 
@@ -57,20 +80,22 @@ DWORD WINAPI BenchmarkThread(LPVOID lpParam){
             uint64_t start = rdtsc_start();
             for (int r = 0; r < REPEATS; r++) {
                 for (size_t i = 0; i < steps; i++) {
-                    array[i * step_size]++;
+                   array[i * step_size]++;
                 }
             }
             uint64_t end = rdtsc_end();
 
-            double avg_cycles = (double)(end - start) / (REPEATS * steps);
-            printf("%zu, %.2f\n", size_kb, avg_cycles);
+           data ->cycles[step_idx] = (double)(end - start) / (REPEATS * steps);
+            
 
-            free(array);
-
+            free((void *)array);
+            step_idx++;
     }
 
+    data->status = 2;
     return 0;
 }
+#endif
 
 int main(int argc, char *argv[]) {
     if (argc < 2){
@@ -82,20 +107,17 @@ int main(int argc, char *argv[]) {
 
     int all_done = 0;
 
-    while(!all_done){
-    //    reset_cursor_position();
-        all_done = 1;
-        Sleep(100);
-    }
-
-    int num_cores = argc - 1;
+        int num_cores = argc - 1;
 
     HANDLE *threads = malloc(num_cores * sizeof(HANDLE));
     ThreadData *thread_data = calloc(num_cores, sizeof(ThreadData));
     
     for (int i = 0; i < num_cores; i++){
         thread_data[i].core_id = atoi(argv[i + 1]);
+        threads[i] = CreateThread(NULL, 0, BenchmarkThread, &thread_data[i], 0, NULL);
     }
+
+    system("cls");
 
     size_t sizes_kb[NUM_STEPS];
     size_t current_size = 4;
@@ -104,7 +126,9 @@ int main(int argc, char *argv[]) {
         current_size *= 2;
     }
 
-    printf("=== CACHE PROFILER ===\n\n");
+    while(!all_done){
+        reset_cursor_position();
+        printf("=== CACHE PROFILER ===\n\n");
     printf("%-10s |", "Size (KB)");
     for (int i = 0; i < num_cores; i++){
         printf(" Core %-4d |", thread_data[i].core_id);
@@ -117,14 +141,27 @@ int main(int argc, char *argv[]) {
     for (int step = 0; step < NUM_STEPS; step++){
         printf("%-10d |", sizes_kb[step]);
         for (int i = 0; i < num_cores; i++){
-            printf(" %-9s |", "...");
+            if (thread_data[i].cycles[step] > 0){
+                printf(" %-9.2f |", thread_data[i].cycles[step]);
+            } else{
+                printf(" %-9s |", "...");
+            }
         }
         printf("\n");
     }
 
     printf("\nStatus:\n");
+    all_done = 1;
     for (int i = 0; i < num_cores; i++) {
         printf("Core %2d: ", thread_data[i].core_id);
+        if (thread_data[i].status == 0) {printf("[ CZEKA ]\n");}
+        else if (thread_data[i].status == 1) { printf(" [ PRACUJE ]\n");}
+        else if (thread_data[i].status == 2) printf("[ GOTOWE ]\n");
+        if (thread_data[i].status != 2) {
+        all_done = 0;
+    }
+    }
+        Sleep(100);
     }
 
     printf("\n\n\n\n");
