@@ -6,7 +6,7 @@ A lightweight C utility designed to profile the memory hierarchy of an x86 proce
 - MinGW-w64 or MSVC
 
 ## Quick Start
-1. `mkdir build && cd build`
-2. `cmake -G "MinGW Makefiles" ..`
-3. `mingw32-make`
-4. `./cache_profiler.exe 0 1` (profiles cores 0 and 1)
+- `mkdir build && cd build`
+- `cmake -G "MinGW Makefiles" ..`
+- `mingw32-make`
+- `./cache_profiler.exe 0 1` (profiles cores 0 and 1)
