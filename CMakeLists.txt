@@ -8,11 +8,11 @@ include_directories(include)
 
 set(SOURCES
 	src/main.c
+	src/benchmark.c
+	src/os_windows.c
 	# src/profiler.c
 )
 
-add_executable(cache_profiler ${SOURCES})
-
 if(WIN32)
-	target_link_libraries(cache_profiler PRIVATE Kernel32)
+	add_executable(cache_profiler ${SOURCES})
 endif()
