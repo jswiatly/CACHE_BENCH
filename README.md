@@ -10,3 +10,5 @@ A lightweight C utility designed to profile the memory hierarchy of an x86 proce
 - `cmake -G "MinGW Makefiles" ..`
 - `mingw32-make`
 - `./cache_profiler.exe 0 1` (profiles cores 0 and 1)
+
+<img width="294" height="330" alt="example" src="https://github.com/user-attachments/assets/c4bce5ac-fa3a-4ba0-becd-16b84247a734" />
