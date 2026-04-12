@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
 
     while(!all_done){
         os_clear_console();
-        system("cls");
 
         printf("=== CACHE PROFILER ===\n\n");
         printf("%-10s |", "Size (KB)");
@@ -58,9 +57,9 @@ int main(int argc, char *argv[]) {
     all_done = 1;
     for (int i = 0; i < num_cores; i++) {
         printf("Core %2d: ", thread_data[i].core_id);
-        if (thread_data[i].status == 0) { printf(" [ CZEKA ]\n"); }
-        else if (thread_data[i].status == 1) { printf(" [ PRACUJE ]\n"); }
-        else if (thread_data[i].status == 2) { printf(" [ GOTOWE ]\n"); }
+        if (thread_data[i].status == 0)      { printf("[   CZEKA  ]\n"); }
+        else if (thread_data[i].status == 1) { printf("[  PRACUJE ]\n"); }
+        else if (thread_data[i].status == 2) { printf("[  GOTOWE  ]\n"); }
         if (thread_data[i].status != 2) {
         all_done = 0;
     }

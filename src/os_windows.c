@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-void os_clear_console(void){
+void os_clear_console(void) {
     COORD coord = {0, 0};
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
